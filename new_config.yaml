@@ -1,0 +1,308 @@
+config:
+  # vehicle_speed_threshold defines the speed threshold for the vehicle to turn on alert system
+  vehicle_speed_threshold: 65
+  override_CAN: 1 # 0 - No, 1 -Yes
+  override_Camera: 0 # 0 - No, 1 -Yes
+
+  # ML Pipeline configuration
+  # frames_per_second : how many inference frames the ML collects per second
+  # write_interval_sec: how often (seconds) the majority result is written to log_detection.txt
+  #                     this must match time_sleep in detection_config so they stay in sync
+  ml_pipeline:
+    frames_per_second: 200 # ML inference rate (frames collected per batch)
+    write_interval_sec: 1 # seconds per batch → majority written to log_detection.txt
+
+  # AIS-184 Phase 1 Compliance Configuration
+  ais_184:
+    enabled: true
+
+    # Ignition self-test parameters
+    ignition_self_test:
+      enabled: true
+      warning_light_duration: 2 # seconds
+      max_test_time: 5 # seconds from ignition ON
+
+    # Speed-based activation
+    activation:
+      # Vehicle category per AIS-184 (M1, M2, M3, N2, N3)
+      # M1: Passenger vehicles (max 8 seats + driver) - threshold: 70 km/h
+      # M2/M3: Buses (>8 seats + driver) - threshold: 60 km/h
+      # N2/N3: Trucks (>3.5t) - threshold: 60 km/h
+      vehicle_category: "M1" # Options: M1, M2, M3, N2, N3
+
+      # Category-specific speed thresholds (automatically applied based on vehicle_category)
+      category_thresholds:
+        M1: 70 # km/h for passenger vehicles
+        M2: 60 # km/h for buses
+        M3: 60 # km/h for buses
+        N2: 60 # km/h for trucks
+        N3: 60 # km/h for trucks
+
+      # Legacy field for backward compatibility (overridden by category_thresholds if vehicle_category is set)
+      speed_threshold_kmh: 65 # km/h (default per AIS-184 for passenger vehicles)
+
+      deactivation_delay: 30 # seconds below threshold before deactivation
+      activation_delay_max: 300 # 5 minutes max delay per AIS-184 section 3.1.6
+
+    # Warning signal parameters
+    warning_signals:
+      light:
+        luminous_intensity_min: 0.6 # candela
+        luminous_intensity_max: 2.0 # candela
+        intensity_level: 1.2 # candela (configurable within range)
+      buzzer:
+        sound_pressure_min: 75 # dBA at driver ear
+        sound_pressure_max: 90 # dBA
+        frequency_min: 500 # Hz
+        frequency_max: 3000 # Hz
+        duration_drowsiness: 3 # seconds
+        duration_failure: 5 # seconds
+
+    # Failure detection
+    failure_detection:
+      electrical:
+        enabled: true
+        detection_timeout: 3 # seconds (must be > time_sleep to avoid false triggers)
+        check_interval: 0.5 # seconds
+      sensor_obstruction:
+        enabled: true
+        detection_timeout: 10 # seconds
+        quality_threshold: 0.3 # normalized quality metric (0-1)
+        consecutive_frames: 20 # frames below threshold = obstruction
+
+    # Logging
+    logging:
+      enabled: true
+      log_file: "ais_184_compliance_log.txt"
+      log_activation_events: true
+      log_warning_events: true
+      log_failure_events: true
+
+  # Temporal smoothing configuration for detection state management
+  # This prevents single "awake" frames from resetting detection counters during sustained drowsiness
+  temporal_smoothing:
+    enabled: true # Set to false to disable temporal smoothing (backward compatibility)
+    window_size: 5 # Number of recent frames to maintain in the sliding window
+    consecutive_awake_threshold: 3 # Number of consecutive "awake" frames needed to confirm driver is alert and reset counters
+    consecutive_drowsy_threshold: 1 # Number of consecutive drowsy frames needed to confirm drowsy state (asymmetric hysteresis)
+
+  # The config1 section defines the general configuration for the system.
+  config1:
+    # The detection_config section defines the parameters for different types of detections.
+    detection_config:
+      timer:
+        awake: 10
+        eyes_closed: 50
+        distraction: 50
+
+
+      # low alert time (in seconds)
+      low_alert_timer:
+        eyes_closed: 5
+        distraction: 10
+
+      # medium alert time (in seconds)
+      medium_alert_timer:
+        eyes_closed: 7
+        distraction: 20
+
+      # high alert time (in seconds)
+      high_alert_timer:
+        eyes_closed: 10
+        distraction: 30
+
+      threshold_percentage:
+        eyes_closed: 90
+        distraction: 80
+
+      time_sleep:
+        time_sleep: 0.5
+
+    # The alert_config section defines the actions to be taken for each type of detection event.
+    alert_config:
+      action:
+        yawn:
+          low:
+            - beep
+            - led
+          medium:
+            - beep
+          high:
+            - beep
+            - sms:
+                message: "Take a break if You're feeling sleepy"
+                phone_number: 6383577376
+            - call:
+                phone_number: 6383577376
+
+        eyes_closed:
+          low:
+            - beep
+            - led
+          medium:
+            - beep
+            - sms:
+                message: "Don't Sleep Wake Up emergency"
+                phone_number: 6383577376
+          high:
+            - beep
+            - call:
+                phone_number: 6383577376
+
+        distraction:
+          low:
+            - beep
+          medium:
+            - beep
+          high:
+            - beep
+            - sms:
+                message: "demo"
+                phone_number: 6383577376
+
+      # The params section defines parameters for each type of detection event.
+      params:
+        led_duration:
+          eyes_closed: 2
+          distraction: 2
+
+        audio_file_path:
+          eyes_closed: "high_beep.wav"
+          distraction: "stay_focused.wav"
+
+        overlap:
+          beep: 1
+          led: 0
+          sms: 0
+          call: 0
+
+  config2:
+    # The detection_config section defines the parameters for different types of detections.
+    detection_config:
+      timer:
+        awake: 10
+        eyes_closed: 70
+        distraction: 60
+        
+      # low alert time (in seconds)
+      low_alert_timer:
+        eyes_closed: 2
+        distraction: 3
+
+      # medium alert time (in seconds)
+      medium_alert_timer:
+        eyes_closed: 5
+        distraction: 7
+
+      # high alert time (in seconds)
+      high_alert_timer:
+        eyes_closed: 7
+        distraction: 10
+
+      threshold_percentage:
+        eyes_closed: 75
+        distraction: 0
+
+
+      time_sleep:
+        time_sleep: 1
+
+    # The alert_config section defines the actions to be taken for each type of detection event.
+    alert_config:
+      action:
+        yawn:
+          low:
+            - beep
+            - led
+          medium:
+            - beep
+          high:
+            - beep
+            - sms:
+                message: "demo"
+                phone_number: 7538809280
+            - call:
+                phone_number: 6383577376
+
+        eyes_closed:
+          low:
+            - beep
+          medium:
+            - call:
+                phone_number: 9150936261
+          high:
+            - beep
+            - sms:
+                message: "Wake Up! Emergency"
+                phone_number: 6381867180
+
+        distraction:
+          low:
+            - beep
+          medium:
+            - beep
+          high:
+            - beep
+            - sms:
+                message: "Don't be distracted."
+                phone_number: 6381867180
+
+      params:
+        led_duration:
+          yawn: 2
+          eyes_closed: 2
+          distraction: 2
+          phone: 2
+          smoking: 2
+
+        audio_file_path:
+          eyes_closed: "high_beep.wav"
+          distraction: "stay_focused.wav"
+
+        overlap:
+          beep: 0
+          led: 0
+          sms: 1
+          call: 0
+
+    alert_config1:
+      action:
+        eyes_closed:
+          low:
+            - beep
+          medium:
+            - call:
+                phone_number: 6381867180
+          high:
+            - sms:
+                message: "Driver is drowsy"
+                phone_number: 7538809280
+
+        distraction:
+          low:
+            - led
+          medium:
+            - beep
+          high:
+            - sms:
+                message: "Driver is distracted"
+                phone_number: 7538809280
+
+      # The params section defines parameters for each type of detection event.
+      params:
+        led_duration:
+          eyes_closed: 2
+          distraction: 2
+
+        audio_file_path:
+          eyes_closed: "high_beep.wav"
+          distraction: "stay_focused.wav"
+
+        overlap:
+          beep: 0
+          led: 0
+          sms: 1
+          call: 0
+
+#flow of the config file
+flow: [config2, detection_config, alert_config1]

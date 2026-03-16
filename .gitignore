@@ -1,0 +1,115 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+ENV/
+env/
+
+# ML Models (large files)
+*.onnx
+*.prototxt
+*.weights
+*.h5
+*.pb
+
+# Test files and folders
+test_*.py
+*_test.py
+tests/
+test/
+
+# Documentation (markdown files)
+*.md
+!README.md
+
+# Log files
+*.log
+*.txt
+!requirements.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Video/Image files
+*.mp4
+*.avi
+*.mov
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Audio files
+*.wav
+*.mp3
+
+# PDF files
+*.pdf
+
+# Kiro specific
+.kiro/
+
+# Ignore ignition state tracking
+ignition_state*.txt
+
+# Ignore vehicle speed logs
+vehicle_speed_log.txt
+
+# Ignore detection logs
+log_detection*.txt
+
+# Ignore compliance logs
+ais_184_compliance_log.txt
+*_compliance_log.txt
+
+# Ignore all test scripts except core ones
+
+# Keep essential files
+!new_detection_logic.py
+!new_trigger_alert.py
+!new_config.yaml
+!check_electrical_system.py
+!production_startup.py
+!hardware_gpio_interface.py
+!test_integration.py
+!test_ml_pipeline.py
+!test_onnx_inference.py
+__pycache__/
+md_files/
+test/
+
+Recording 2026-03-16 231438.mp4
+
